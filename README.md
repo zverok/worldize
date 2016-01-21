@@ -19,7 +19,7 @@ img.write('blank.png')
 **Picture:**
 <img src="https://raw.github.com/zverok/worldize/master/examples/output/blank.png" alt="Monochrome countries"/>
 
-You can set some options (see Usage for details):
+You can set some options (see [Usage](#usage) for details):
 ```ruby
 worldize = Worldize::Countries.new
 img = worldize.draw(ocean: '#3A3C3C', land: 'black', border: 'yellow')
@@ -90,7 +90,7 @@ values = worldize.country_names.sort.each_with_index.to_a.to_h
 
 ## Installation
 
-It's game, named `worldize`. Do your usual `[sudo] gem install worldize`
+It's gem, named `worldize`. Do your usual `[sudo] gem install worldize`
 or adding `gem 'worldize'` to Gemfile routine.
 
 ## Usage
