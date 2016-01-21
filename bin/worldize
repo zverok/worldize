@@ -1,0 +1,167 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'worldize'
+
+require 'optparse'
+
+# вариант 1: нарисуй эти страны, цвет такой-то
+# вариант 2: нарисуй массив страна/цвет
+# вариант 3: нарисуй массив страна/значение
+
+# общие опции: 
+
+options = Hashie::Mash.new
+
+# I hate OptionParser! But don't want to add Slop dependency to the gem :(
+OptionParser.new do |opts|
+  opts.banner = "Usage: worldize [options]"
+
+  opts.separator ""
+  opts.separator "Map colors (optional, have reasonable defaults):"
+
+  opts.on('--land LAND_COLOR', 'Land color') do |color|
+    options.land = color
+  end
+
+  opts.on('--ocean OCEAN_COLOR', 'Ocean color') do |color|
+    options.ocean = color
+  end
+
+  opts.on('--border BORDER_COLOR', 'Border color') do |color|
+    options.border = color
+  end
+
+  opts.on('--higlight HIGHLIGHT_COLOR', 'Higlighted country background (only with --highlight-countries') do |color|
+    options.higlight = color
+  end
+
+  opts.on('-f', '--gradient-from COLOR', 'Gradient from (only with --grad-countries)') do |color|
+    options.from = color
+  end
+
+  opts.on('-t', '--gradient-to COLOR', 'Gradient to (only with --grad-countries)') do |color|
+    options.to = color
+  end
+
+  opts.separator ""
+  opts.separator "How to output countries (ONE of below options should be used):"
+
+  opts.on('--highlight-countries COUNTRY_NAMES', Array, 'Comma-separated countries list OR path to CSV with data') do |countries|
+    options.mode = :highlight
+
+    if File.exists?(countries.first)
+      options.csv = countries.first
+    else
+      options.countries = countries
+    end
+  end
+
+  opts.on('--paint-countries COUNTRY_COLORS', Array, 'Comma-separated list of "country:color" pairs OR path to CSV with data') do |countries|
+    options.mode = :paint
+
+    if File.exists?(countries.first)
+      options.csv = countries.first
+    else
+      options.countries = countries.map{|c_c|
+        c_c.split(/\s*:\s*/).tap{|cc| cc.size == 02 or fail("Pair of country:color expected, '#{c_c}' got")}
+      }.to_h
+    end
+  end
+
+  opts.on('--grad-countries COUNTRY_VALUES', Array, 'Comma-separated list of "country:numeric" pairs to calculate gradient colors OR path to CSV with data') do |countries|
+    options.mode = :gradient
+    
+    if File.exists?(countries.first)
+      options.csv = countries.first
+    else
+      options.countries = countries.map{|c_c|
+        c_c.split(/\s*:\s*/).tap{|cc| cc.size == 02 or fail("Pair of country:color expected, '#{c_c}' got")}
+      }.map{|c, col| [c, col.to_f]}.to_h
+    end
+  end
+
+  opts.separator ""
+  opts.separator "CSV options (if you providede CSV path as a data):"
+
+  opts.on('--[no-]csv-headers', 'First column of CSV is headers (also allows to set columns by names') do |h|
+    options.csv_headers = h
+  end
+
+  opts.on('--csv-columns COLUMNS', Array,
+    'CSV columns to use (first should be countries, second colors or values). '\
+    '0-based column index or column name can be used') do |cols|
+    options.csv_columns = cols
+  end
+
+  opts.separator ""
+  opts.separator "Output image:"
+
+  opts.on('-w', '--width IMAGE_WIDTH',
+    Integer, 'Image width in pixel (height will be determined automatically), optional, default 1024') do |width|
+
+    options.width = width
+  end
+
+  opts.on('-o', '--output OUTPUT_PATH', 'Output image path/filename, any common extension allowed') do |path|
+    options.path = path
+  end
+
+ opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# validate:
+options.path or fail("Output path is mandatory!")
+#options.mode or fail("One of --highlight-countries, --paint-countries, --grad-countries is mandatory!")
+
+# extract data:
+if options.csv
+  require 'csv'
+  
+  options.csv_columns or fail("You should provide --csv-columns option with CSV file")
+  data = CSV.read(options.csv, headers: options.csv_headers)
+  columns = if options.csv_headers
+    options.csv_columns.map{|col|
+      col =~ /^\d+$/ ? col.to_i : data.headers.index(col) or
+        fail("Column #{col} not found")
+    }
+  else
+    options.csv_columns.map(&:to_i)
+  end
+
+  data = data.map{|r| columns.map{|c| r[c]}}
+  
+  options.countries = case options.mode
+  when :highlight
+    data.map(&:first)
+  when :paint
+    data.map{|r| [r[0], r[1]]}.to_h
+  when :gradient
+    data.map{|r| [r[0], r[1].to_f]}.to_h
+  end
+end
+
+start = Time.now
+
+opts = {ocean: options.ocean,
+  land: options.land,
+  border: options.border,
+  highlight: options.highlight,
+  width: options.width}.reject{|k, v| !v}
+
+worldize = Worldize::Countries.new
+case options.mode
+when :highlight
+  worldize.draw_highlighted(*options.countries, **opts)
+when :paint
+  worldize.draw(options.countries.to_h.merge(opts))
+when :gradient
+  from_color = options.from or fail('--grad-countries requires --from-color')
+  to_color = options.to or fail('--grad-countries requires --to-color')
+  worldize.draw_gradient(from_color, to_color, options.countries, opts)
+end.
+  write(options.path)
+
+puts "Ready in %.1f seconds. Results writen in %s" % [Time.now - start, options.path]

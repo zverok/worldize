@@ -27,17 +27,17 @@ img.write('night.png')
 ```
 <img src="https://raw.github.com/zverok/worldize/master/examples/output/styles.png" alt="Styles"/>
 
-### Some countries selected
+### Some countries highlighted
 
 **Code:**
 ```ruby
 Worldize::Countries.new.
-  draw_selected('Ukraine', 'Argentina', 'Portugal', 'India', 'Iceland').
-  write('selected.png')
+  draw_highlighted('Ukraine', 'Argentina', 'Portugal', 'India', 'Iceland').
+  write('highlighted.png')
 ```
 
 **Picture:**
-<img src="https://raw.github.com/zverok/worldize/master/examples/output/selected.png" alt="Selected countries"/>
+<img src="https://raw.github.com/zverok/worldize/master/examples/output/highlighted.png" alt="Highlighted countries"/>
 
 ### Countries painted in custom colors
 
@@ -138,13 +138,52 @@ Values should be numeric and colors will be scaled to gradient between
 
 ### From command line
 
-**TBD**
+Use `worldize --help` for details.
+
+**Highlight countries:**
+```
+worldize -o highlighted.png \
+  --highlight-countries Ukraine,Argentina,Portugal,India,Iceland 
+```
+
+**Colors for countries:**
+```
+worldize -o color.png \
+  --paint-countries "Ukraine:#FCF83D,Argentina:#FE7ECD,Portugal:#FD1F30,India:#108400,Iceland:white" 
+```
+or from CSV file
+```
+worldize -o color.png \
+  --paint-countries country_colors.csv --csv-columns 0,1 
+```
+means firs and second columns contain country name and color. Or from CSV
+with headers:
+```
+worldize -o color.png \
+  --paint-countries country_colors.csv
+  --csv-headers --csv-columns Country,Color 
+```
+
+**Color-coded statisitcs**
+```
+worldize  -o gradient.png \
+  --from-color '#D4F6C8' --to-color '#247209' \
+  --grad-countries "Argentina:100,Bolivia:50,Chile:180"
+```
+or from CSV file, like above:
+```
+worldize  -o gradient.png \
+  --from-color '#D4F6C8' --to-color '#247209' \
+  --grad-countries country_stats.csv --csv-headers --columns "Country,Population 2015"
+```
 
 ## How this was done
 
 * Country borders are taken from [geojson](http://data.okfn.org/data/datasets/geo-boundaries-world-110m)
   (sourced from Natural Earth by OpenData license);
 * Web Mercator map projection calculated according to [formulae](https://en.wikipedia.org/wiki/Web_Mercator#Formulas);
+* Result is cropped to exclude polar areas (which has nothing interesting
+  in any case!);
 * RMagick for drawing, awesome [color](https://rubygems.org/gems/color/versions/1.8)
   gem for gradients calculation.
 

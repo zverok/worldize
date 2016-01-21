@@ -16,7 +16,7 @@ module Worldize
       ocean: 'white',
       land: '#E0E6FF',
       border: '#0000FF',
-      selected: '#5D7BFB'
+      highlight: '#5D7BFB'
     }
 
     DATA_PATH = File.expand_path('../../data/countries.geojson', __FILE__)
@@ -70,10 +70,10 @@ module Worldize
       img.crop(0, ymin, width, ymax-ymin)
     end
 
-    def draw_selected(*countries, **options)
-      selected_color = options.fetch(:selected, DEFAULT_OPTIONS[:selected])
+    def draw_highlighted(*countries, **options)
+      highlight_color = options.fetch(:highlight, DEFAULT_OPTIONS[:highlight])
         
-      draw(countries.map{|c| [c, selected_color]}.to_h.merge(options))
+      draw(countries.map{|c| [c, highlight_color]}.to_h.merge(options))
     end
 
     def draw_gradient(from_color, to_color, value_by_country, **options)
@@ -88,6 +88,10 @@ module Worldize
         to_h
 
       draw(values.merge(options))
+    end
+
+    def inspect
+      "#<#{self.class}>"
     end
 
     private

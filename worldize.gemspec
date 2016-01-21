@@ -24,8 +24,12 @@ Gem::Specification.new do |s|
     )$/x
   end
   s.require_paths = ["lib"]
+  s.bindir = 'bin'
+  s.executables << 'worldize'
 
   s.add_dependency 'rmagick'
   s.add_dependency 'hashie'
   s.add_dependency 'color'
+
+  s.add_development_dependency 'rubygems-tasks'
 end
