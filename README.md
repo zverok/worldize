@@ -26,6 +26,12 @@ or adding `gem 'worldize'` to Gemfile routine.
 
 ## Usage
 
+## How this is done
+
+## TODO
+
+_(or not TODO, depends on whether somebody needs this)_
+
 ## Authors
 
 ## License

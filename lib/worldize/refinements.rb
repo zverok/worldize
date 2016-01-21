@@ -1,5 +1,11 @@
 module Worldize
   module Refinements
+    refine Object do
+      def derp
+        yield self
+      end
+    end
+
     refine Range do
       def distance
         self.end - self.begin

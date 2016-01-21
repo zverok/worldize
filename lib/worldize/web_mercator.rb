@@ -15,10 +15,7 @@ module Worldize
       φ = -lat * π / 180
       
       Math.log(Math.tan(π / 4 + φ / 2)).
-        rescale(
-          -4.75..4.75, # Don't know... just guessed it.
-                       # Neither of online-existing formulas of Web merkator helps
-          0..max_y)
+        rescale(-π..π, 0..max_y)
     end
   end
 end
