@@ -2,4 +2,3 @@
 vendor
 Gemfile.lock
 tmp
-examples/output/*.*
