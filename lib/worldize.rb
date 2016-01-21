@@ -2,11 +2,10 @@ require 'bundler/setup'
 require 'rmagick'
 require 'json'
 require 'hashie'
-require 'rgb'
+require 'color'
 
 require_relative 'worldize/refinements'
 require_relative 'worldize/web_mercator'
-require_relative 'worldize/rgb'
 
 module Worldize
   class Countries
@@ -80,12 +79,12 @@ module Worldize
     def draw_gradient(from_color, to_color, value_by_country, **options)
       min = value_by_country.values.min
       max = value_by_country.values.max
-      from = RGB::Color.from_rgb_hex(from_color)
-      to   = RGB::Color.from_rgb_hex(to_color)
+      from = ::Color::RGB.from_html(from_color)
+      to   = ::Color::RGB.from_html(to_color)
 
       values = value_by_country.
         map{|country, value| [country, value.rescale(min..max, 0..100)]}.
-        map{|country, value| [country, from.mix(to, value).to_rgb_hex]}.
+        map{|country, value| [country, from.mix_with(to, 100 - value).html]}.
         to_h
 
       draw(values.merge(options))
