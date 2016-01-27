@@ -5,17 +5,17 @@
 module Worldize
   module WebMercator
     using Worldize::Refinements
+    include Math
     
     def lng2x(lng, max_x)
       lng.rescale(-180..180, 0..max_x)
     end
 
     def lat2y(lat, max_y)
-      π = Math::PI
+      π = PI
       φ = -lat * π / 180
       
-      Math.log(Math.tan(π / 4 + φ / 2)).
-        rescale(-π..π, 0..max_y)
+      log(tan(π / 4 + φ / 2)).rescale(-π..π, 0..max_y)
     end
   end
 end

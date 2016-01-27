@@ -79,8 +79,8 @@ module Worldize
     def draw_gradient(from_color, to_color, value_by_country, **options)
       min = value_by_country.values.min
       max = value_by_country.values.max
-      from = ::Color::RGB.from_html(from_color)
-      to   = ::Color::RGB.from_html(to_color)
+      from = ::Color::RGB.by_css(from_color)
+      to   = ::Color::RGB.by_css(to_color)
 
       values = value_by_country.
         map{|country, value| [country, value.rescale(min..max, 0..100)]}.
