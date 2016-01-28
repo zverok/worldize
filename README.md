@@ -2,7 +2,7 @@ Worldize
 ========
 
 **Worldize** is a very simple and naive gem to make world map, with
-countries painted accodring to some values (see also
+countries painted according to some values (see also
 [choropleth map](https://en.wikipedia.org/wiki/Choropleth_map)).
 
 ## Demonstration
