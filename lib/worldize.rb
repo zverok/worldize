@@ -67,7 +67,7 @@ module Worldize
       ymin = lat2y(84, width)
       ymax = lat2y(-63, width)
 
-      img.crop(0, ymin, width, ymax-ymin)
+      img.crop(0, ymin, width, ymax-ymin, true)
     end
 
     def draw_highlighted(*countries, **options)
