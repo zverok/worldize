@@ -29,6 +29,16 @@ module Worldize
         line(*coord2point(from_lat, from_lng), *coord2point(to_lat, to_lng)).
         draw(@img)
     end
+
+    def text(lat, lng, text, **options)
+      if gravity = options[:to]
+        const = gravity.to_s.capitalize.gsub(/_([a-z])/){|s| $1.upcase} + 'Gravity'
+        options[:gravity] = Magick.const_get(const)
+      end
+      Draw.new.tap{|d| set_draw_options(d, options)}.
+        text(*coord2point(lat, lng), text).
+        draw(@img)
+    end
     
     def width
       @img.columns
@@ -48,6 +58,10 @@ module Worldize
       stroke: :stroke,
       fill: :fill,
       width: :stroke_width,
+      opacity: :opacity,
+      gravity: :gravity,
+      size: :pointsize,
+      font: :font_family,
     }
 
     def set_draw_options(draw, options)

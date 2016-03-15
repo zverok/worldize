@@ -46,9 +46,23 @@ module Worldize
     end
 
     context 'polygons' do
+      context :polygon do
+      end
+
+      context :multi_polygon do
+      end
     end
 
     context 'texts' do
+      before{
+        map.text(*kharkiv, 'Kharkiv', to: :north, font: 'Verdana', size: 10)
+
+        Draw.new.font_family('Verdana').pointsize(10).
+          gravity(NorthGravity).
+          text(*kharkiv_xy, 'Kharkiv').
+          draw(img)
+      }
+      it{should be_same_image img}
     end
     
     #it 'compares images' do
