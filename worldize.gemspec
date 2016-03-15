@@ -32,4 +32,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'color'
 
   s.add_development_dependency 'rubygems-tasks'
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rspec-its'
 end
