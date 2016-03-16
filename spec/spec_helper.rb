@@ -2,10 +2,14 @@ require 'rmagick'
 include Magick
 
 RSpec::Matchers.define :be_same_image do |expected|
+  def diff_tolerance
+    0.001
+  end
+  
   match do |actual|
     expected.rows == actual.rows &&
       expected.columns == actual.columns &&
-      expected.difference(actual).first.zero?
+      expected.difference(actual).first < diff_tolerance
   end
 
   failure_message do |actual|

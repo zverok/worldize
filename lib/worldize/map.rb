@@ -34,9 +34,19 @@ module Worldize
       self
     end
 
-    def polygon(*points, **options)
+    def polygon(*polygons, **options)
+      polygons.all?{|poly|
+        poly.is_a?(Array) &&
+          poly.all?{|n| n.is_a?(Numeric)} &&
+          (poly.count % 2).zero?
+      } or fail('Expected one or several arrays of points [x1, y1, x2, y2....]')
+
+      path = polygons.map{|poly|
+        svg_polygon(poly.each_slice(2).map{|ll| coord2point(*ll)})
+      }.join("\n")
+      
       Draw.new.tap{|d| set_draw_options(d, options)}.
-        polygon(*points.each_slice(2).map{|ll| coord2point(*ll)}.flatten).
+        path(path).
         draw(@img)
 
       self
@@ -115,6 +125,14 @@ module Worldize
 
     def coord2point(lat, lng)
       [lng2x(lng, width), lat2y(lat, height)]
+    end
+
+    def svg_polygon(points)
+      [
+        'M%f,%f' % points.first,
+        *points[1..-1].map{|p| 'L%f,%f' % p},
+        'Z'
+      ].join(' ')
     end
   end
 end

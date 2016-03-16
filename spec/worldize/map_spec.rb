@@ -8,16 +8,17 @@ module Worldize
       [lng2x(lng, width), lat2y(lat, height)]
     end
     
-    let(:width){ 200 }
-    let(:height){ 200 }
-    let(:map){ Map.new(width, height, background: '#E0E6FF') }
+    let(:width){ 1000 }
+    let(:height){ 1000 }
+    let(:background){ '#E0E6FF' }
+    let(:map){ Map.new(width, height, background: background) }
     let(:img){ Image.new(width, height){|i| i.background_color = '#E0E6FF'} }
 
     let(:kharkiv){ [50.004444, 36.231389] }
-    let(:kharkiv_xy){ [lng2x(36.231389, width), lat2y(50.004444, height)] }
+    let(:kharkiv_xy){ coord2point(*kharkiv) }
 
     let(:kyiv){ [50.45, 30.523333] }
-    let(:kyiv_xy){ [lng2x(30.523333, width), lat2y(50.45, height)] }
+    let(:kyiv_xy){ coord2point(*kyiv) }
 
     subject{map.render}
 
@@ -63,9 +64,10 @@ module Worldize
         let(:points_xy){
           points.each_slice(2).map{|ll| coord2point(*ll)}.flatten
         }
+
         context 'simple' do
           before{
-            map.polygon(*points, color: 'red', fill: 'green')
+            map.polygon(points, color: 'red', fill: 'green')
 
             Draw.new.stroke('red').fill('green').
               polygon(*points_xy).
@@ -75,6 +77,34 @@ module Worldize
         end
 
         context 'with hole' do
+          let(:hole){[
+            45.613033, 13.059202,
+            41.995221, 19.294312,
+            41.184222, 16.990032,
+            44.849387, 12.313699,
+          ]}
+
+          let(:hole_xy){
+            hole.each_slice(2).map{|ll| coord2point(*ll)}.flatten
+          }
+          let(:path){
+            [points_xy, hole_xy].map{|points|
+                fmt = ['M%f,%f',
+                  *['L%f,%f'] * (points.count/2 - 1)
+                ].join(' ') + 'Z'
+                fmt % points
+            }.join("\n")
+          }
+
+          before{
+            map.polygon(points, hole, color: 'red', fill: 'green')
+
+            Draw.new.stroke('red').
+              fill('green').path(path).
+              draw(img)
+          }
+          
+          it{should be_same_image img}
         end
 
         context 'with several holes' do
