@@ -2,4 +2,5 @@
 vendor
 Gemfile.lock
 tmp
+spec/diffs/
 pkg
