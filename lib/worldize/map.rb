@@ -52,6 +52,45 @@ module Worldize
       self
     end
 
+    def multipolygon(*polygons, **options)
+      polygons.each do |components|
+        polygon(*components, **options)
+      end
+    end
+
+    def feature(hash, **options)
+      coords = hash['coordinates']
+      
+      case hash['type']
+      when 'Point'
+        circle(*coords, **({radius: 3}.merge(options)))
+      when 'MultiPoint'
+        coords.each do |pt|
+          circle(*pt, **({radius: 3}.merge(options)))
+        end
+      when 'LineString'
+        line(*coords.flatten, **options)
+      when 'MultiLineString'
+        coords.each do |ln|
+          line(*ln.flatten, **options)
+        end
+      when 'Polygon'
+        polygon(*coords.map(&:flatten), **options)
+      when 'MultiPolygon'
+        coords.each do |poly|
+          polygon(*poly.map(&:flatten), **options)
+        end
+      when 'Feature'
+        feature(hash['geometry'], **options)
+      when 'FeatureCollection'
+        hash['features'].each do |f|
+          feature(f, **options)
+        end
+      else
+        fail ArgumentError, "Undefined feature type #{hash['type'].inspect}"
+      end
+    end
+
     def text(lat, lng, string, **options)
       x, y = coord2point(lat, lng)
       draw = Draw.new.
@@ -107,19 +146,27 @@ module Worldize
 
     OPTS = {
       stroke: :stroke,
+      color: :stroke,
       fill: :fill,
       width: :stroke_width,
-      opacity: :opacity,
       gravity: :gravity,
       size: :pointsize,
       font: :font_family,
-      color: :stroke
+
+      # NB: order is imporant here: opacity should be set AFTER stroke/fill colors
+      opacity: :opacity,
+      transparency: ->(draw, val){draw.opacity(1 - val)}
     }
 
     def set_draw_options(draw, options)
       OPTS.each do |key, method|
-        val = options[key]
-        draw.send(method, val) if val
+        val = options[key] or next
+        case method
+        when Symbol
+          draw.send(method, val)
+        when Proc
+          method.call(draw, val)
+        end
       end
     end
 

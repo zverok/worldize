@@ -28,14 +28,33 @@ module Worldize
 
     describe 'simple primitives' do
       context :circle do
-        before{
+        it 'is drawn' do
           map.circle(*kharkiv, radius: 3, stroke: 'red', fill: 'transparent')
 
           Draw.new.stroke('red').fill('transparent').
             circle(*kharkiv_xy, kharkiv_xy.first + 3, kharkiv_xy.last).
             draw(img)
-        }
-        it{should be_same_image img}
+
+          expect(map.render).to be_same_image img
+        end
+
+        it 'respects options' do
+          map.circle(*kharkiv, radius: 20, color: 'blue', fill: 'blue', opacity: 0.2)
+          map.circle(*kyiv, radius: 50, color: 'green', fill: 'green', transparency: 0.9)
+
+          Draw.new.
+            stroke('blue').fill('blue').opacity(0.2).
+            circle(*kharkiv_xy, kharkiv_xy.first + 20, kharkiv_xy.last).
+            draw(img)
+
+          # when operating on single draw, opacities are interconnected somehow
+          Draw.new.
+            stroke('green').fill('green').opacity(0.1).
+            circle(*kyiv_xy, kyiv_xy.first + 50, kyiv_xy.last).
+            draw(img)
+
+          expect(map.render).to be_same_image img
+        end
       end
 
       context :line do
@@ -112,6 +131,20 @@ module Worldize
       end
 
       context :multi_polygon do
+      end
+    end
+
+    context 'GeoJSON' do
+      it 'draws simple geometries' do
+      end
+
+      it 'draws features' do
+      end
+
+      it 'draws collections' do
+      end
+
+      it 'draws arrays' do
       end
     end
 

@@ -3,7 +3,7 @@ include Magick
 
 RSpec::Matchers.define :be_same_image do |expected|
   def diff_tolerance
-    0.001
+    0.1
   end
   
   match do |actual|
