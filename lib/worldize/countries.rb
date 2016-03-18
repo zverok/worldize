@@ -1,7 +1,5 @@
 module Worldize
   class Countries < Map
-    include Magick
-
     DEFAULT_WIDTH = 1024
     DEFAULT_COLORS = {
       ocean: 'white',
