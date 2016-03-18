@@ -60,25 +60,27 @@ module Worldize
 
     def feature(hash, **options)
       coords = hash['coordinates']
+
+      # Note the reversing of coordinates: GeoJSON uses [lng, lat] order.
       
       case hash['type']
       when 'Point'
-        circle(*coords, **({radius: 3}.merge(options)))
+        circle(*coords.reverse, **({radius: 3}.merge(options)))
       when 'MultiPoint'
         coords.each do |pt|
           circle(*pt, **({radius: 3}.merge(options)))
         end
       when 'LineString'
-        line(*coords.flatten, **options)
+        line(*coords.map(&:reverse).flatten, **options)
       when 'MultiLineString'
         coords.each do |ln|
           line(*ln.flatten, **options)
         end
       when 'Polygon'
-        polygon(*coords.map(&:flatten), **options)
+        polygon(*coords.map{|p| p.map(&:reverse)}.map(&:flatten), **options)
       when 'MultiPolygon'
         coords.each do |poly|
-          polygon(*poly.map(&:flatten), **options)
+          polygon(*poly.map{|p| p.map(&:reverse)}.map(&:flatten), **options)
         end
       when 'Feature'
         feature(hash['geometry'], **options)
