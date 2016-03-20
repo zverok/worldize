@@ -1,5 +1,5 @@
 module Worldize
-  class Countries < Map
+  class World < Map
     DEFAULT_WIDTH = 1024
     DEFAULT_COLORS = {
       ocean: 'white',
@@ -34,18 +34,24 @@ module Worldize
       value_by_country ||= {}
       options = DEFAULT_COLORS.merge(options)
       border = options.fetch(:border)
-      palette = Palette.new(options.fetch(:palette))
+      palette = Palette.make(options.fetch(:palette))
       
       colored = value_by_country.select{|_, value| value.is_a?(String)}
       measured = value_by_country.select{|_, value| value.is_a?(Numeric)}
       highlighted = value_by_country.select{|_, value| value.is_a?(TrueClass)}
 
+      highlighted = highlighted.
+        map{|country, _| [country, palette.first]}.to_h
+
       min = measured.values.min
       max = measured.values.max
+      measured = measured.
+        map{|country, value| [country, palette.pct(value.rescale(min..max, 0..100))]}.
+        to_h
 
       countries = colored.
-        merge(highlighted.map{|country, _| [country, palette.first]}.to_h).
-        merge(measured.map{|country, value| [country, palette.pct(value.rescale(min..max, 0..100))}.to_h)
+        merge(highlighted).
+        merge(measured)
 
 
       @countries.each do |country|
@@ -55,5 +61,16 @@ module Worldize
               
         feature(country.geometry, color: border, fill: bg)
       end
+
+      self
     end
+
+    def render
+      # really meaningful lat: -63..83, everything else is, in fact, poles
+      ymin = lat2y(84, width)
+      ymax = lat2y(-63, width)
+      
+      super.crop(0, ymin, width, ymax-ymin, true)
+    end
+  end
 end
