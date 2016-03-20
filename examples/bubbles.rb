@@ -27,7 +27,7 @@ capitals.sort_by(&:population).reverse.each do |row|
   r = sqrt(area / PI)
   map.circle(row.lat, row.lng,
     radius: r, color: 'blue', fill: 'blue',
-    transparency: row.population.rescale(0..max_pop, 0..1))
+    transparency: row.population.rescale(0..max_pop, 0..0.8))
 end
 
 capitals.sort_by(&:population).reverse.each do |row|
