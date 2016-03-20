@@ -98,31 +98,8 @@ module Worldize
       draw = Draw.new.
         tap{|d| set_draw_options(d, options)}
       
-
-      dw = dh = 0
-      if gravity = options[:to]
-        # ImageMagick gravity is REALLY PRETTY WEIRD, at least in this context
-        #const = gravity.to_s.capitalize.gsub(/_([a-z])/){|s| $1.upcase} + 'Gravity'
-        #options[:gravity] = Magick.const_get(const)
-
-        metrics = draw.get_type_metrics('{' + string + '}')
-        gravity.to_s.split(/_/).each do |component|
-          case component
-          when 'north'
-            dh = -metrics.height/2
-          when 'south'
-            dh = metrics.height/2
-          when 'east'
-            dw = metrics.width/2
-          when 'west'
-            dw = -metrics.width/2
-          when 'center'
-            # no translation
-          else
-            fail ArgumentError, "Unknown gravity component #{component}"
-          end
-        end
-      end
+      dw, dh = calc_text_shift(draw, string, **options)
+      
       draw.
         translate(x + dw, y + dh).
         text_align(CenterAlign).gravity(CenterGravity).
@@ -147,17 +124,19 @@ module Worldize
     private
 
     OPTS = {
+      color: ->(draw, color){draw.stroke(color).fill(color)},
       stroke: :stroke,
-      color: :stroke,
       fill: :fill,
       width: :stroke_width,
-      gravity: :gravity,
       size: :pointsize,
       font: :font_family,
+      style: ->(draw, style){
+        draw.font_style(Magick.const_get(style.to_s.capitalize + 'Style'))
+      },
 
       # NB: order is imporant here: opacity should be set AFTER stroke/fill colors
       opacity: :opacity,
-      transparency: ->(draw, val){draw.opacity(1 - val)}
+      transparency: ->(draw, transparency){draw.opacity(1 - transparency)}
     }
 
     def set_draw_options(draw, options)
@@ -170,6 +149,40 @@ module Worldize
           method.call(draw, val)
         end
       end
+    end
+
+    def calc_text_shift(draw, text, **options)
+      direction = options[:to] or return [0, 0]
+
+      # NO, ITS NOT the same as draw.pointsize(...) which we set at #set_draw_options
+      # See https://github.com/rmagick/rmagick/issues/237
+      # ...and cry with me
+      draw.pointsize = options.fetch(:size)
+      
+      metrics = draw.get_type_metrics(text)
+
+      dw = dh = 0
+
+      direction.to_s.split(/_/).each do |component|
+        case component
+        when 'north'
+          dh = -metrics.height/2
+        when 'south'
+          dh = metrics.height/2
+        when 'east'
+          dw = metrics.width/2
+        when 'west'
+          dw = -metrics.width/2
+        when 'center'
+          # no translation
+        else
+          fail ArgumentError, "Unknown gravity component #{component}"
+        end
+      end
+      
+      dh -= metrics.descent
+
+      [dw, dh]
     end
 
     def coord2point(lat, lng)

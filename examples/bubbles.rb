@@ -11,16 +11,12 @@ countries = File.read('data/countries.geojson').
         derp{|hash| Hashie::Mash.new(hash)}.
         features
 
-map = Worldize::Map.new(2000, 2000, background: 'white')
-countries.each do |c|
-  map.feature(c, fill: '#E0E6FF', color: '#0000FF')
-end
+map = Worldize::World.new(width: 2000, ocean: 'white')
+map.countries
 
 capitals = CSV.read(File.expand_path('../data/population_by_capital.csv', __FILE__), headers: true, converters: [:integer, :float]).
             map{|row| OpenStruct.new(row.to_h)}.
             select(&:population) # dropping capitals with population unknown
-
-p capitals.first
 
 max_pop = capitals.map(&:population).max
 max_r = 50
@@ -35,7 +31,7 @@ capitals.sort_by(&:population).reverse.each do |row|
 end
 
 capitals.sort_by(&:population).reverse.each do |row|
-  map.text(row.lat, row.lng, row.name, to: :north_east, size: 10)
+  map.text(row.lat, row.lng, row.name, to: :north_east, size: 10, style: :normal)
 end
 
 map.render.write('examples/output/bubbles.png')
