@@ -1,5 +1,8 @@
+require 'color'
 require 'rmagick'
 include Magick
+
+require 'rspec/its'
 
 RSpec::Matchers.define :be_same_image do |expected|
   def diff_tolerance
