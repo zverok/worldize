@@ -1,5 +1,5 @@
 require 'bundler/setup'
 require 'worldize'
 
-Worldize::Countries.new.
-  draw.write('examples/output/blank.png')
+Worldize::World.new.
+  countries.render.write('examples/output/blank.png')

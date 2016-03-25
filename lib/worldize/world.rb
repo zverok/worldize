@@ -5,6 +5,7 @@ module Worldize
       ocean: 'white',
       land: '#E0E6FF',
       border: '#0000FF',
+
       palette: '#5D7BFB'
     }
 
@@ -29,9 +30,24 @@ module Worldize
       @countries.map{|c| c.properties.name}
     end
 
-    def countries(value_by_country = nil, **options)
+    def country(name, **options)
+      feature = @countries.
+        detect{|c| [c.properties.name, c.properties.iso_a3].include?(name)} or
+        fail(ArgumentError, "Country not found: #{name}")
+
+      options = DEFAULT_COLORS.merge(options)
+      options[:fill] ||= options.fetch(:land)
+      options[:stroke] ||= options.fetch(:border)
+      
+      feature(feature.geometry, **options)
+
+      self
+    end
+
+    def countries(values_and_options = {})
       # NB: syntax countries(value_by_country = {}, **options) causes segfault in Ruby 2.2.0
-      value_by_country ||= {}
+      options, value_by_country  = values_and_options.
+        partition{|k, _| k.is_a?(Symbol)}.map(&:to_h)
 
       options = DEFAULT_COLORS.merge(options)
 
@@ -44,7 +60,7 @@ module Worldize
               countries[country.properties.iso_a3] ||
               options.fetch(:land)
               
-        feature(country.geometry, color: border, fill: bg)
+        feature(country.geometry, stroke: border, fill: bg)
       end
 
       self
