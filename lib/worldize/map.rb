@@ -1,15 +1,19 @@
 require_relative 'refinements'
 require_relative 'web_mercator'
+require_relative 'projections/base'
+require_relative 'projections/web_mercator'
+require_relative 'projections/aeqd'
 
 module Worldize
   class Map
     include Magick
-    include WebMercator
-    
+
     def initialize(width, height, **options)
       @img = Image.new(width, height){|i|
           i.background_color = options[:background]
         }
+      @projection = Projections::AEqD.new(width, height)
+      #@projection = Projections::WebMercator.new(width, height)
     end
 
     def inspect
@@ -44,7 +48,7 @@ module Worldize
       path = polygons.map{|poly|
         svg_polygon(poly.each_slice(2).map{|ll| coord2point(*ll)})
       }.join("\n")
-      
+
       Draw.new.tap{|d| set_draw_options(d, options)}.
         path(path).
         draw(@img)
@@ -62,7 +66,7 @@ module Worldize
       coords = hash['coordinates']
 
       # Note the reversing of coordinates: GeoJSON uses [lng, lat] order.
-      
+
       case hash['type']
       when 'Point'
         circle(*coords.reverse, **({radius: 3}.merge(options)))
@@ -97,9 +101,9 @@ module Worldize
       x, y = coord2point(lat, lng)
       draw = Draw.new.
         tap{|d| set_draw_options(d, options)}
-      
+
       dw, dh = calc_text_shift(draw, string, **options)
-      
+
       draw.
         translate(x + dw, y + dh).
         text_align(CenterAlign).gravity(CenterGravity).
@@ -108,7 +112,7 @@ module Worldize
 
       self
     end
-    
+
     def width
       @img.columns
     end
@@ -158,7 +162,7 @@ module Worldize
       # See https://github.com/rmagick/rmagick/issues/237
       # ...and cry with me
       draw.pointsize = options.fetch(:size)
-      
+
       metrics = draw.get_type_metrics(text)
 
       dw = dh = 0
@@ -179,14 +183,14 @@ module Worldize
           fail ArgumentError, "Unknown gravity component #{component}"
         end
       end
-      
+
       dh -= metrics.descent
 
       [dw, dh]
     end
 
     def coord2point(lat, lng)
-      [lng2x(lng, width), lat2y(lat, height)]
+      @projection.call(lat, lng)
     end
 
     def svg_polygon(points)

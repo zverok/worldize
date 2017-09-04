@@ -15,7 +15,7 @@ module Worldize
 
     def initialize(width: DEFAULT_WIDTH, ocean: DEFAULT_COLORS[:ocean])
       super(width, width, background: ocean)
-      
+
       @countries = File.read(DATA_PATH).
         derp{|json| JSON.parse(json)}.
         derp{|hash| Hashie::Mash.new(hash)}.
@@ -38,7 +38,7 @@ module Worldize
       options = DEFAULT_COLORS.merge(options)
       options[:fill] ||= options.fetch(:land)
       options[:stroke] ||= options.fetch(:border)
-      
+
       feature(feature.geometry, **options)
 
       self
@@ -59,7 +59,7 @@ module Worldize
         bg = countries[country.properties.name] ||
               countries[country.properties.iso_a3] ||
               options.fetch(:land)
-              
+
         feature(country.geometry, stroke: border, fill: bg)
       end
 
@@ -70,7 +70,7 @@ module Worldize
       value_by_country ||= {}
 
       options = DEFAULT_COLORS.merge(options)
-      
+
       max = value_by_place.values.max
       max_r = options.fetch(:max_radius, 50)
       max_area = PI*max_r**2
@@ -88,13 +88,13 @@ module Worldize
       self
     end
 
-    def render
-      # really meaningful lat: -63..83, everything else is, in fact, poles
-      ymin = lat2y(84, width)
-      ymax = lat2y(-63, width)
-      
-      super.crop(0, ymin, width, ymax-ymin, true)
-    end
+    #def render
+      ## really meaningful lat: -63..83, everything else is, in fact, poles
+      #ymin = lat2y(84, width)
+      #ymax = lat2y(-63, width)
+
+      #super.crop(0, ymin, width, ymax-ymin, true)
+    #end
 
     private
 
