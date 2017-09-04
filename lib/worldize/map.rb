@@ -3,6 +3,7 @@ require_relative 'web_mercator'
 require_relative 'projections/base'
 require_relative 'projections/web_mercator'
 require_relative 'projections/aeqd'
+require_relative 'projections/natural_earth'
 
 module Worldize
   class Map
@@ -12,8 +13,9 @@ module Worldize
       @img = Image.new(width, height){|i|
           i.background_color = options[:background]
         }
-      @projection = Projections::AEqD.new(width, height)
+      #@projection = Projections::AEqD.new(width, height)
       #@projection = Projections::WebMercator.new(width, height)
+      @projection = Projections::NaturalEarth.new(width, height)
     end
 
     def inspect

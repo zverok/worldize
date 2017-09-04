@@ -13,8 +13,8 @@ module Worldize
         xrad, yrad = impl(deg2rad(lat), deg2rad(lng))
         [
           xrad.rescale(-π..π, 0..@xmax),
-          #@ymax - yrad.rescale(-π..π, 0..@ymax)
-          yrad.rescale(-π..π, 0..@ymax)
+          @ymax - yrad.rescale(-π..π, 0..@ymax)
+          #yrad.rescale(-π..π, 0..@ymax)
         ]
       end
 
