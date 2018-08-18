@@ -1,16 +1,16 @@
 require 'bundler/setup'
-require 'rmagick'
+require 'mini_magick'
 require 'json'
 require 'hashie'
 require 'color'
+require 'tempfile'
+require 'erb'
 
 require_relative 'worldize/refinements'
 require_relative 'worldize/web_mercator'
 
 module Worldize
   class Countries
-    include Magick
-
     DEFAULT_OPTIONS = {
       width: 1024,
       ocean: 'white',
@@ -40,39 +40,58 @@ module Worldize
       @countries.map{|c| c.properties.name}
     end
 
-    # NB: syntax draw(countries = {}, **options) causes segfault in Ruby 2.2.0
+    def template
+      template_filename = 'worldize/template.mvg.erb'
+      template_path = File.join(File.dirname(__FILE__), template_filename)
+      ERB.new(File.read(template_path), nil, '-')
+    end
+
+    # MiniMagick cannot ha
+    # rubocop:disable Metrics/MethodLength
+    def convert_mvg_to_png(input_file, width, ymin, ymax)
+      temp = Tempfile.new(['worldize', '.png'])
+      begin
+        # workaround, there isnt a way to enforce `mvg:filename` decode
+        MiniMagick::Tool::Convert.new do |convert|
+          convert << "mvg:#{input_file.path}"
+          convert << temp.path
+        end
+        png = MiniMagick::Image.open(temp.path, '.png')
+        png.combine_options do |c|
+          c.crop "#{width}x#{ymax - ymin}+0+#{ymin}!"
+        end
+      ensure
+        temp.close
+        temp.unlink # deletes the temp file
+      end
+      png
+    end
+    # rubocop:enable Metrics/MethodLength
+
+
     def draw(countries_and_options = {})
       options = DEFAULT_OPTIONS.merge(countries_and_options)
       width = options.fetch(:width)
-      
-      img = Image.new(width, width){
-        self.background_color = options.fetch(:ocean)
-      }
-
-      gc = Magick::Draw.new.
-        stroke(options.fetch(:border)).stroke_width(1).
-        fill(options.fetch(:land))
-
-      @countries.each do |country|
-        bg = countries_and_options[country.properties.name] ||
-              countries_and_options[country.properties.iso_a3] ||
-              options.fetch(:land)
-        draw_country(gc, country, width, bg)
-        gc.fill(options.fetch(:land))
-      end
-
-      gc.draw(img)
-
       # really meaningful lat: -63..83, everything else is, in fact, poles
       ymin = lat2y(84, width)
       ymax = lat2y(-63, width)
 
-      img.crop(0, ymin, width, ymax-ymin, true)
+      file = Tempfile.new(['worldize', '.mvg'])
+      begin
+        mvg_content = template.result(binding)
+        file.write(mvg_content)
+        file.close
+        png = convert_mvg_to_png(file, width, ymin, ymax)
+      ensure
+        file.close
+        file.unlink # deletes the temp file
+      end
+      png
     end
 
     def draw_highlighted(*countries, **options)
       highlight_color = options.fetch(:highlight, DEFAULT_OPTIONS[:highlight])
-        
+
       draw(countries.map{|c| [c, highlight_color]}.to_h.merge(options))
     end
 
@@ -106,17 +125,6 @@ module Worldize
           }.map(&:reverse) # GeoJSON has other approach to lat/lng ordering
 
       country
-    end
-
-    def draw_country(gc, country, width, bg)
-      gc.fill(bg)
-
-      country.polygons.each do |poly|
-        polygon = poly.map(&:reverse).
-          map{|lat, lng| [lng2x(lng, width), lat2y(lat, width)]}
-          
-        gc.polygon(*polygon.flatten)
-      end
     end
   end
 end

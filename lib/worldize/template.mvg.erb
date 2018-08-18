@@ -1,0 +1,21 @@
+push graphic-context
+  viewbox 0 0 <%= options.fetch(:width) %> <%= options.fetch(:width) %>
+  push graphic-context
+   fill <%= options.fetch(:ocean) %>
+   rectangle 0,0 <%= options.fetch(:width) %>,<%= options.fetch(:width) %>
+  pop graphic-context
+  push graphic-context
+    stroke '<%= options.fetch(:border) %>'
+    stroke-width 1
+    fill '<%= options.fetch(:land) %>'
+    <% @countries.each do |country| -%>
+    <% bg = countries_and_options[country.properties.name] || countries_and_options[country.properties.iso_a3] || options.fetch(:land) -%>
+    fill '<%= bg %>'
+    <% country.polygons.each do |poly| -%>
+    <% polygon = poly.map(&:reverse).map{|lat, lng| [lng2x(lng, width), lat2y(lat, width)]}.flatten -%>
+    polygon <% polygon.each_slice(2) do |point|%><%= point[0] %>,<%= point[1] %> <% end %>
+    <% end -%>
+    fill '<%= options.fetch(:land) %>'
+    <% end %>
+  pop graphic-context
+pop graphic-context

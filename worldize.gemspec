@@ -27,9 +27,10 @@ Gem::Specification.new do |s|
   s.bindir = 'bin'
   s.executables << 'worldize'
 
-  s.add_dependency 'rmagick'
+  s.add_dependency 'mini_magick'
   s.add_dependency 'hashie'
   s.add_dependency 'color'
 
   s.add_development_dependency 'rubygems-tasks'
+  s.add_development_dependency 'pry'
 end
